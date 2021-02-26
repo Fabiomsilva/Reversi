@@ -1,1 +1,1 @@
-Reversi
+Reversi project from AI course

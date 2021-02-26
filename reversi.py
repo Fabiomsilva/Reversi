@@ -32,6 +32,7 @@ class Reversi:
         # A trick used commonly in code golfs
         self.current = [BLACK, WHITE][self.current == BLACK]
 
+
     def check_original(self, x, y, dx, dy, player=None, operate=False, func=lambda *a: None):
         """
         Checks if a move can turn any other pieces in a given direction
@@ -93,8 +94,8 @@ class Reversi:
 
         found = False
         c = 0
-        while True:
-            x += dx
+        while True: 
+            x += dx    
             y += dy
             if not (0 <= x < BS and 0 <= y < BS):
                 break
@@ -191,27 +192,8 @@ class Reversi:
         if player is None:
             player = self.current
 
-        changes = []  # Save changes for undo
-
-        def saveChange(x, y):
-            changes.append((x, y))
-
-        self.check(x, y, -1, -1, player, True, saveChange)
-        self.check(x, y, 1, 1, player, True, saveChange)
-        self.check(x, y, -1, 0, player, True, saveChange)
-        self.check(x, y, 1, 0, player, True, saveChange)
-        self.check(x, y, -1, 1, player, True, saveChange)
-        self.check(x, y, 1, -1, player, True, saveChange)
-        self.check(x, y, 0, -1, player, True, saveChange)
-        self.check(x, y, 0, 1, player, True, saveChange)
-
-        if len(changes) == 0:  # Not movable
-            return False
-
         self.board[x][y] = player
-        changes.append((x, y))
         self.toggle()
-        self.skipPut()
         return True
 
     def skipPut(self):
@@ -238,4 +220,3 @@ class Reversi:
             for y in range(BS):
                 res = (3 * res + self.board[x][y]) % HASH_KEY
         return res ^ (1 + self.current)
-

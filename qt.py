@@ -5,7 +5,6 @@ import reversi
 from reversi import BS
 import ai
 
-
 if BS == 8:
     GRID_SIZE = 50
 else:
@@ -27,11 +26,10 @@ class ReversiUI(QWidget):
     def __init__(self):
         self.game = reversi.Reversi()
         self.ai = ai.ReversiAI()
-        #BS = BS
+        BS = reversi.BS
         self.ai.setLevel(0)
         self.player1 = reversi.BLACK
         self.player2 = reversi.WHITE
-        self.current = reversi.BLACK
         self.typeGameMode = 1                   # 1:Human-Computer, 2:Computer-Computer, 3:Human-Human
 
         # Create layout
@@ -118,56 +116,62 @@ class ReversiUI(QWidget):
             return
         self.game.put(aiMove)
         self.update_ui(True)
-        self.game.toggle()
+        #self.game.toggle()
 
     def human_computer(self, pos):
-        if not self.Turn:
-            return  # Not your move, shouldn't respond
-        x, y = pos
-        if not self.game.canPut(x, y):
-            return  # Bad move, ignore it
-        self.game.put(x, y)
-        self.update_ui(True)
-        while not self.Turn and not self.game.over:
-            if self.game.skipPut():
-                break
-            self.aiMove()
-    
-    def computer_computer(self, pos):
-        if self.Turn:
-                return  # Not your move, shouldn't respond
-        x, y = pos
-        if not self.game.canPut(x, y):
-            return  # Bad move, ignore it
-        self.game.put(x, y)
-        self.update_ui(True)
-        while not self.Turn and not self.game.over:
-            if self.game.skipPut():
-                break
-            self.aiMove()
-
-    def human_human(self, pos):
-        if self.current == reversi.BLACK:
-            self.current_player.setText("BLACK")
-            x, y = pos
-            if not self.game.canPut(x, y):
-                self.game.skipPut()
-                self.game.toggle()
-                self.update_ui(True)
-                return
-            self.game.put(x, y)
-            self.game.toggle()
-            self.update_ui(True)
-        else:
+        if  self.game.current == 1:
             self.current_player.setText("WHITE")
             x, y = pos
             if not self.game.canPut(x, y):
-                self.game.skipPut()
+                self.game.toggle()
+                self.update_ui(True)
+            self.game.put(x, y)
+            self.update_ui(True)
+        else:
+            self.current_player.setText("BLACK")
+            x, y = pos
+            if not self.game.canPut(x, y):
+                self.game.toggle()
+                self.update_ui(True)
+            self.aiMove()
+            self.update_ui(True)
+        
+        #x, y = pos
+        #if not self.game.canPut(x, y):
+        #    return  # Bad move, ignore it
+        #self.game.put(x, y)
+        #self.update_ui(True)
+        #while not self.Turn and not self.game.over:
+        #    if self.game.skipPut():
+        #        break
+        #    self.aiMove()
+    
+    def computer_computer(self, pos):
+        if  self.game.current == 1:
+            self.current_player.setText("WHITE")
+            self.aiMove()
+        else:
+            self.current_player.setText("BLACK")
+            self.aiMove()
+
+    def human_human(self, pos):
+        if  self.game.current == 1:
+            self.current_player.setText("WHITE")
+            x, y = pos
+            if not self.game.canPut(x, y):
                 self.game.toggle()
                 self.update_ui(True)
                 return
             self.game.put(x, y)
-            self.game.toggle()
+            self.update_ui(True)
+        else:
+            self.current_player.setText("BLACK")
+            x, y = pos
+            if not self.game.canPut(x, y):
+                self.game.toggle()
+                self.update_ui(True)
+                return
+            self.game.put(x, y)
             self.update_ui(True)
 
     def onClickBoard(self, pos):
@@ -346,4 +350,3 @@ class ScoreIndicator(QWidget):
             p.setPen(QPen(Qt.black, 48))
         p.setFont(QFont("Arial", 48, QFont.Bold))
         p.drawText(b, Qt.AlignCenter, str(self.number))
-

@@ -25,7 +25,7 @@ ind_margin =  (IND_BOARD_SIZE - IND_SIZE) // 2
 class ReversiUI(QWidget):
     def __init__(self):
         self.game = reversi.Reversi()
-        self.ai = ai.ReversiAI()
+        self.ai = ai.Reversi_AI()
         BS = reversi.BS
         self.ai.setLevel(0)
         self.player1 = reversi.BLACK
@@ -57,10 +57,15 @@ class ReversiUI(QWidget):
         self.infoBar.addWidget(self.current_player)
 
         self.reset_button = QPushButton("New Game")
+        self.ai_move_button = QPushButton("AI Move")
         self.diffBox = QComboBox()
         self.diffBox.addItems(["1: Easy", "2: Medium", "3: Hard"])
         self.typeBox = QComboBox()
         self.typeBox.addItems(["1: Human-Computer", "2: Computer-Computer", "3: Human-Human"])
+        self.ai_move_button = QPushButton("AI Move")
+        self.ai_move_button.setHidden(False)
+
+        self.controlBar.addWidget(self.ai_move_button)
         self.controlBar.addWidget(self.typeBox)
         self.controlBar.addWidget(self.diffBox)
         self.controlBar.addWidget(self.reset_button)
@@ -83,19 +88,31 @@ class ReversiUI(QWidget):
             """
             self.ai.setLevel(index)
             self.resetGame()
+            self.update_ui
 
         def typeGame(index):
             """
             Event handler on "type" cascade menu changes
             1:Human-Computer, 2:Computer-Computer, 3:Human-Human
             """
-            self.typeGameMode = index+1   
+            self.typeGameMode = index+1 
+
+            if self.typeGameMode == 1: # Human-Computer
+                self.ai_move_button.setHidden(False)
+            if self.typeGameMode == 2: # Computer-Computer   
+                self.ai_move_button.setHidden(False)
+            if self.typeGameMode == 3: # Human-Human
+                self.ai_move_button.setHidden(True)
+            self.update_ui
             self.resetGame()
+            
 
         self.reset_button.clicked.connect(self.resetGame)
         self.painter.mouseReleaseEvent = boardClick
         self.diffBox.currentIndexChanged.connect(diffChange)
         self.typeBox.currentIndexChanged.connect(typeGame)
+        self.ai_move_button.clicked.connect(self.aiMove)
+        
         
         self.setLayout(self.master)
         self.setWindowTitle("Reversi: IA FEUP")
@@ -109,79 +126,78 @@ class ReversiUI(QWidget):
         """
         To perform an AI move
         """
+        #means that is human vs computer and is human turn
+        if self.game.current ==1 and self.typeGameMode == 1:         
+            return
+        # -----------------------------------#
         aiMove = self.ai.findBestStep(self.game)
         if aiMove == ():
             self.game.skipPut()
             self.game.toggle()
             return
+        #means that is "Computer1" vs "computer2"
+        if self.game.current ==1 and self.typeGameMode == 2:         
+            self.current_player.setText("WHITE")
+        else:
+            self.current_player.setText("BLACK")
+        # -----------------------------------#
+        print("AI Move:", aiMove[0], aiMove[1])
         self.game.put(aiMove)
         self.update_ui(True)
-        #self.game.toggle()
 
     def human_computer(self, pos):
         if  self.game.current == 1:
-            self.current_player.setText("WHITE")
             x, y = pos
-            if not self.game.canPut(x, y):
+            if not self.game.canPut(x, y):  # bad move, not possible move
+                self.update_ui(True)
+                return
+            if not self.game.any():         # if does not have any available chance
                 self.game.toggle()
                 self.update_ui(True)
+                return
             self.game.put(x, y)
-            self.update_ui(True)
-        else:
-            self.current_player.setText("BLACK")
-            x, y = pos
-            if not self.game.canPut(x, y):
-                self.game.toggle()
-                self.update_ui(True)
-            self.aiMove()
-            self.update_ui(True)
-        
-        #x, y = pos
-        #if not self.game.canPut(x, y):
-        #    return  # Bad move, ignore it
-        #self.game.put(x, y)
-        #self.update_ui(True)
-        #while not self.Turn and not self.game.over:
-        #    if self.game.skipPut():
-        #        break
-        #    self.aiMove()
-    
-    def computer_computer(self, pos):
-        if  self.game.current == 1:
+            print("Human Move:", x,y)
             self.current_player.setText("WHITE")
-            self.aiMove()
+            self.update_ui(True)    
         else:
             self.current_player.setText("BLACK")
-            self.aiMove()
-
+    
     def human_human(self, pos):
         if  self.game.current == 1:
-            self.current_player.setText("WHITE")
             x, y = pos
-            if not self.game.canPut(x, y):
+            if not self.game.canPut(x, y):  # bad move, not possible move
+                self.update_ui(True)
+                return
+            if not self.game.any():         # if does not have any available chance
                 self.game.toggle()
                 self.update_ui(True)
                 return
             self.game.put(x, y)
+            self.current_player.setText("WHITE")
             self.update_ui(True)
         else:
-            self.current_player.setText("BLACK")
             x, y = pos
-            if not self.game.canPut(x, y):
+            if not self.game.canPut(x, y):  # bad move, not possible move
+                self.update_ui(True)
+                return
+            if not self.game.any():         # if does not have any available chance
                 self.game.toggle()
                 self.update_ui(True)
                 return
             self.game.put(x, y)
+            self.current_player.setText("BLACK")
             self.update_ui(True)
 
     def onClickBoard(self, pos):
         """
         Game event handler on clicking the board
         """ 
+        i, x = pos
+        #if there is one peace there i cant put another one
+        if self.game.board[i][x] != 0:
+            return
         if self.typeGameMode == 1: # Human-Computer
             self.human_computer(pos) 
-        if self.typeGameMode == 2: # Computer-Computer   
-            self.computer_computer(pos) 
         if self.typeGameMode == 3: # Human-Human
             self.human_human(pos)
 
@@ -193,10 +209,6 @@ class ReversiUI(QWidget):
                 QMessageBox.information(self, "Reversi", "Black Wins!")
             elif black < white:
                 QMessageBox.information(self, "Reversi", "white Wins!")
-
-    #@property
-    def Turn(self):
-        return self.player1 == self.game.current and not self.game.over
 
     def update_board(self):
         """
@@ -232,10 +244,7 @@ class ReversiUI(QWidget):
         """
         self.game.reset()
         self.update_ui()
-        while not self.Turn and not self.game.over:
-            if self.game.skipPut():
-                break
-            self.aiMove()
+        self.current_player.setText("Current Player")
 
 class PaintArea(QWidget):
     """

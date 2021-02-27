@@ -1,4 +1,4 @@
-BS = 8 
+BS = 8
 
 EMPTY = 0
 BLACK = 1
@@ -31,50 +31,6 @@ class Reversi:
         """
         # A trick used commonly in code golfs
         self.current = [BLACK, WHITE][self.current == BLACK]
-
-
-    def check_original(self, x, y, dx, dy, player=None, operate=False, func=lambda *a: None):
-        """
-        Checks if a move can turn any other pieces in a given direction
-
-        Parameters:
-            x, y:    The position of the move
-            dx, dy:  Specify a direction
-            player:  Who
-            operate: Perform the actual move after checking
-            func:    Anything additive to perform
-
-        Return: A boolean value indicating changes
-        """
-        if player is None:  # Process default value
-            player = self.current
-
-        found = False
-        c = 0
-        while True:
-            x += dx
-            y += dy
-            if not (0 <= x < BS and 0 <= y < BS):
-                break
-            chess = self.board[x][y]
-            if chess == EMPTY:      # if empty cant place because i only can plance if there is some peace in the neighbour
-                break
-            elif chess == player:   # if there is one peace of the current player
-                found = True
-                break
-            else:
-                c += 1
-
-        if c > 0 and found:
-            if operate:
-                while c > 0:
-                    x -= dx
-                    y -= dy
-                    self.board[x][y] = player
-                    func(x, y)
-                    c -= 1
-            return True
-        return False
 
     def check(self, x, y, dx, dy, player=None, operate=False, func=lambda *a: None):
         """
@@ -154,16 +110,6 @@ class Reversi:
         return any(self.canPut(x, y, player) for x in range(BS) for y in range(BS))
 
     @property
-    def over(self):
-        """
-        Is game over? (Both sides cannot move)
-        """
-        return (not self.any(BLACK)) and (not self.any(WHITE))
-
-    def at(self, x, y):
-        return self.board[x][y]
-
-    @property
     def chessCount(self):
         """
         Get the current score
@@ -181,7 +127,6 @@ class Reversi:
     def put(self, x, y=None, player=None):
         """
         Perform a move at a given position.
-
         Accepts a tuple at parameter 1, or two numbers at parameters 1 and 2
         """
         if y is None:
@@ -202,17 +147,8 @@ class Reversi:
         """
         if self.any(self.current):
             return False
-        self.toggle()
         return True
 
-    def copy(self):
-        """
-        Create a copy of this Reversi game
-        """
-        game = Reversi()
-        game.board = [list(col) for col in self.board]
-        game.current = self.current
-        return game
 
     def __hash__(self):
         res = 0

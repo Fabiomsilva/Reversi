@@ -5,7 +5,7 @@ import random
 # import some constants
 from reversi import BS, EMPTY, BLACK, WHITE
 
-inf = 999999  # Don't use math.inf
+inf = 999999 
 MIN_NODES = 10000
 MIN_TICK = 1000
 
@@ -23,13 +23,11 @@ SCORE = [
 BONUS = 30
 LIBERTY = 8
 
+# depth final
 AICONFIG = [
-    (1, 4),
-    (2, 6),
-    (3, 8),
-    (4, 12),
-    (6, 16),
-    (8, 18)
+    (1, 8),
+    (2, 12),
+    (3, 16),
 ]
 
 DIRECTIONS = [(x - 1, y - 1) for i in range(3) for y, x in enumerate([i] * 3)]
@@ -38,10 +36,10 @@ DIRECTIONS = [(x - 1, y - 1) for i in range(3) for y, x in enumerate([i] * 3)]
 class Reversi_AI:
     def __init__(self):
         self.nodeCount = 0
-        self.depth = 6
+        self.depth = 0
         self.maxDepth = None
-        self.final = 16
-        self.aiLevel = 3
+        self.final = 4
+        self.aiLevel = 0
         self.setLevel()
 
 
@@ -136,6 +134,7 @@ class Reversi_AI:
 
 
     def getHeuristicScore(self, game, player, step):
+        #copy board and make calculations
         game.put(step)
         score = self.heuristicScore(game, player)
         game.undo()
@@ -183,7 +182,6 @@ class Reversi_AI:
             if not game.over:
                 game.skipPut()
                 rscore, rstep = self.heuristicSearch(game, player, depth, alpha, beta)
-                game.undo()
                 return rscore, ()
             else:
                 return self.exactScore(game, player), ()
@@ -246,8 +244,9 @@ class Reversi_AI:
         if len(steps) <= 0:
             return ()
 
-        # Random mode
-        if cc <= (BS - 4) ** 2:
+        # Random mode if the total amount of peaces were less then 20% of all 
+        if cc <= (BS **2)*0.2:
+            print("random", cc)
             randSteps = []
             for x, y in steps:
                 if 2 <= x < BS - 2 and 2 <= y < BS - 2:
@@ -256,7 +255,8 @@ class Reversi_AI:
                 return random.choice(randSteps)
 
         # Final mode: exact search
-        if cc >= BS ** 2 - self.final:
+        if cc >= (BS **2) - self.final:
+            print("final", cc)
             self.maxDepth = BS ** 2 - cc
             self.nodeCount = 0
             rscore, rstep = self.exactSearch(game, player, self.maxDepth, -inf, inf)

@@ -32,7 +32,7 @@ class Reversi:
         # A trick used commonly in code golfs
         self.current = [BLACK, WHITE][self.current == BLACK]
 
-    def check(self, x, y, dx, dy, player=None, operate=False, func=lambda *a: None):
+    def check(self, x, y, dx, dy, player=None, operate=False):
         """
         Checks if a move can turn any other pieces in a given direction
 
@@ -70,7 +70,6 @@ class Reversi:
                     x -= dx
                     y -= dy
                     self.board[x][y] = player
-                    func(x, y)
                     c -= 1
             return True
         return False
@@ -137,6 +136,15 @@ class Reversi:
         if player is None:
             player = self.current
 
+        self.check(x, y, -1, -1, player, True)
+        self.check(x, y, 1, 1, player, True)
+        self.check(x, y, -1, 0, player, True)
+        self.check(x, y, 1, 0, player, True)
+        self.check(x, y, -1, 1, player, True)
+        self.check(x, y, 1, -1, player, True)
+        self.check(x, y, 0, -1, player, True)
+        self.check(x, y, 0, 1, player, True)
+
         self.board[x][y] = player
         self.toggle()
         return True
@@ -147,8 +155,8 @@ class Reversi:
         """
         if self.any(self.current):
             return False
+        self.toggle()
         return True
-
 
     def __hash__(self):
         res = 0

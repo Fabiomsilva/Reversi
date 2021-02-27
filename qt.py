@@ -115,7 +115,7 @@ class ReversiUI(QWidget):
         
         
         self.setLayout(self.master)
-        self.setWindowTitle("Reversi: IA FEUP")
+        self.setWindowTitle("Reversi: Artificial intelligence FEUP")
         self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint | Qt.CustomizeWindowHint)
 
         self.show()
@@ -126,24 +126,22 @@ class ReversiUI(QWidget):
         """
         To perform an AI move
         """
-        #means that is human vs computer and is human turn
-        if self.game.current ==1 and self.typeGameMode == 1:         
+        if self.game.current ==1 and self.typeGameMode == 1:        #means that is human vs computer and is human turn     
             return
-        # -----------------------------------#
+
         aiMove = self.ai.findBestStep(self.game)
         if aiMove == ():
-            self.game.skipPut()
-            self.game.toggle()
             return
-        #means that is "Computer1" vs "computer2"
-        if self.game.current ==1 and self.typeGameMode == 2:         
+
+        if self.game.current ==1 and self.typeGameMode == 2:        #means that is "Computer1" vs "computer2"      
             self.current_player.setText("WHITE")
         else:
             self.current_player.setText("BLACK")
-        # -----------------------------------#
+
         print("AI Move:", aiMove[0], aiMove[1])
         self.game.put(aiMove)
         self.update_ui(True)
+        self.game.skipPut()
 
     def human_computer(self, pos):
         if  self.game.current == 1:
@@ -158,6 +156,7 @@ class ReversiUI(QWidget):
             self.game.put(x, y)
             print("Human Move:", x,y)
             self.current_player.setText("WHITE")
+            self.game.skipPut()
             self.update_ui(True)    
         else:
             self.current_player.setText("BLACK")
@@ -168,10 +167,6 @@ class ReversiUI(QWidget):
             if not self.game.canPut(x, y):  # bad move, not possible move
                 self.update_ui(True)
                 return
-            if not self.game.any():         # if does not have any available chance
-                self.game.toggle()
-                self.update_ui(True)
-                return
             self.game.put(x, y)
             self.current_player.setText("WHITE")
             self.update_ui(True)
@@ -180,13 +175,10 @@ class ReversiUI(QWidget):
             if not self.game.canPut(x, y):  # bad move, not possible move
                 self.update_ui(True)
                 return
-            if not self.game.any():         # if does not have any available chance
-                self.game.toggle()
-                self.update_ui(True)
-                return
             self.game.put(x, y)
             self.current_player.setText("BLACK")
             self.update_ui(True)
+        self.game.skipPut()     #checks if the player is without any chance to move. then toggles if it true
 
     def onClickBoard(self, pos):
         """
@@ -196,6 +188,7 @@ class ReversiUI(QWidget):
         #if there is one peace there i cant put another one
         if self.game.board[i][x] != 0:
             return
+
         if self.typeGameMode == 1: # Human-Computer
             self.human_computer(pos) 
         if self.typeGameMode == 3: # Human-Human
@@ -222,10 +215,7 @@ class ReversiUI(QWidget):
         self.scoreLabelA.update()
         self.scoreLabelB.update()
         self.painter.assignBoard(self.game.board)
-        if self.player1 or self.player2:
-            self.painter.assignDots(self.game.getAvailables())
-        else:
-            self.painter.assignDots(None)
+        self.painter.assignDots(self.game.getAvailables())
         self.painter.update()
 
     def update_ui(self, force=False):

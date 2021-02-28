@@ -137,7 +137,7 @@ class ReversiUI(QWidget):
             self.current_player.setText("WHITE")
         else:
             self.current_player.setText("BLACK")
-
+        
         print("AI Move:", aiMove[0], aiMove[1])
         self.game.put(aiMove)
         self.update_ui(True)

@@ -1,7 +1,6 @@
-
+import copy
 import math
 import random
-import copy
 
 # import some constants
 from reversi import BS, EMPTY, BLACK, WHITE
@@ -40,38 +39,24 @@ else:
         [  1000, -200, 50,  20, 20,  10,    10,   10,   10,   10,   10,  20,    20,  50, -200, 1000],
     ]
 
-
-
-BONUS = 30          # corner bonus BONUS
-LIBERTY = 8
+BONUS = 30          # corner bonus 
 
 # depth final
 AICONFIG = [
-    (1, 8),
-    (2, 12),
-    (3, 16),
+    (1, 4),
+    (2, 6),
+    (3, 8),
 ]
-
-DIRECTIONS = [(x - 1, y - 1) for i in range(3) for y, x in enumerate([i] * 3)]
-
 
 class Reversi_AI:
     def __init__(self):
         self.nodeCount = 0
         self.depth = 1
-        self.maxDepth = None
+        self.maxDepth = 1
         self.final = 4
         self.aiLevel = 0
-        self.save_board = list()    # we save the current board then IA plays and count the points. aflter that we  replace the old board
         self.setLevel()
-
-    def undo(self, game):
-        game.board = self.save_board.copy()
-
-    def save_board_func(self, game):
-        self.save_board = copy.deepcopy(game.board)
-        
-
+   
     def heuristicScore(self, game, player):
         self.nodeCount += 1
         c1, c2, s1, s2 = 0, 0, 0, 0
@@ -89,22 +74,19 @@ class Reversi_AI:
                             liberty += 1
                 if chess == player:
                     c1 += 1
-                    #s1 += SCORE[x][y] - liberty * LIBERTY
                     s1 += SCORE[x][y] 
                 else:
                     c2 += 1
-                    #s2 += SCORE[x][y] - liberty * LIBERTY
                     s2 += SCORE[x][y]
         if c1 == 0:
             return -inf
         if c2 == 0:
             return inf
-        #verificar posteriormente se necessário. parece que entra só quando o jogo ja estaria acabado
-        #if c1 + c2 == BS ** 2:
-        #    if c1 > c2:
-        #        return inf
-        #    if c2 > c1:
-        #        return -inf
+        if c1 + c2 == BS ** 2:
+            if c1 > c2:
+                return inf
+            if c2 > c1:
+                return -inf
 
 
         def checkCorner(pos, adjacents, dpos):
@@ -122,9 +104,9 @@ class Reversi_AI:
                     if chess == EMPTY:
                         continue
                     if chess == player:
-                        s1 -= SCORE[cx][cy]
+                        s1 += SCORE[cx][cy]
                     else:
-                        s2 -= SCORE[cx][cy]
+                        s2 += SCORE[cx][cy]
                 
                 tx, ty = x, y
                 for i in range(0, BS - 2):
@@ -145,14 +127,13 @@ class Reversi_AI:
                         s1 += BONUS
                     else:
                         s2 += BONUS
-
+        
         checkCorner((0, 0), [(0, 1), (1, 0), (1, 1)], (1, 1))                                               # top left corner 
         checkCorner((BS - 1, 0), [(BS - 2, 0), (BS - 2, 1), (BS - 1, 1)], (-1, 1))                          # top right corner
         checkCorner((0, BS - 1), [(0, BS - 2), (1, BS - 2), (1, BS - 1)], (1, -1))                          # bottom left corner
         checkCorner((BS - 1, BS - 1), [(BS - 2, BS - 2), (BS - 2, BS - 1), (BS - 1, BS - 2)], (-1, -1))     # bottom right corner
 
         return s1 - s2
-
 
     def exactScore(self, game, player):
         self.nodeCount += 1
@@ -167,13 +148,10 @@ class Reversi_AI:
         return score
 
     def getHeuristicScore(self, game, player, step):
-        self.save_board_func(game)
-        game.put(step)          # atention, this function put and do toggle !!
-        game.toggle()           # turns to make toggle to be same player on the evaluation score
+        game.put(step)                                   # atention, this function put the peace and do toggle !!
         score = self.heuristicScore(game, player)
-        self.undo(game)
+        game.undo()
         return score
-
 
     def heuristicSearch(self, game, player, depth, alpha, beta):
         if depth <= 0:
@@ -196,48 +174,7 @@ class Reversi_AI:
             for step in steps:
                 game.put(step)
                 rscore, rstep = self.heuristicSearch(game, player, depth - 1, alpha, beta)
-                self.undo(game)
-                if maxMode:
-                    if rscore > score:
-                        score, bestStep = rscore, step
-                    alpha = max(alpha, score)
-                    if alpha >= beta:
-                        #print("%d alpha cut: %d, %d" % (depth ,alpha, beta))
-                        break
-                else:
-                    if rscore < score:
-                        score, bestStep = rscore, step
-                    beta = min(beta, score)
-                    if alpha >= beta:
-                        #print("%d beta cut: %d, %d" % (depth, alpha, beta))
-                        break
-        else:
-            if not game.over:
-                game.skipPut()
-                rscore, rstep = self.heuristicSearch(game, player, depth, alpha, beta)
-                return rscore, ()
-            else:
-                return self.exactScore(game, player), ()
-        return score, bestStep
-
-
-    def exactSearch(self, game, player, depth, alpha, beta):
-        if depth <= 0:
-            return self.exactScore(game, player), ()
-
-        maxMode = (game.current == player)
-        score = -inf-1 if maxMode else inf+1
-        steps = game.getAvailables()
-        bestStep = ()
-
-        if len(steps) > 0:
-            for step in steps:
-                game.put(step)
-                rscore, rstep = self.exactSearch(game, player, depth - 1, alpha, beta)
-                self.undo(game)
-                if depth == self.maxDepth - 1:
-                    print(maxMode, rscore)
-
+                game.undo()
                 if maxMode:
                     if rscore > score:
                         score, bestStep = rscore, step
@@ -253,13 +190,10 @@ class Reversi_AI:
         else:
             if not game.over:
                 game.skipPut()
-                rscore, rstep = self.exactSearch(game, player, depth, alpha, beta)
-                self.undo(game)
-                return rscore, ()
+                return self.exactScore(game, player), ()
             else:
                 return self.exactScore(game, player), ()
         return score, bestStep
-
 
     def setLevel(self, level=None):
         if level is None:
@@ -267,7 +201,6 @@ class Reversi_AI:
 
         self.aiLevel = level
         self.depth, self.final = AICONFIG[level]
-
 
     def findBestStep(self, game):
         player = game.current
@@ -286,17 +219,12 @@ class Reversi_AI:
             if len(randSteps) > 0:
                 return random.choice(randSteps)
 
-        # Final mode: exact search
-        if cc >= (BS **2) - self.final:
-            print("final", cc)
-            self.maxDepth = BS ** 2 - cc
-            self.nodeCount = 0
-            rscore, rstep = self.exactSearch(game, player, self.maxDepth, -inf, inf)
-            if rscore != -inf:
-                return rstep
-
         # Heuristic search
         self.nodeCount = 0
         self.maxDepth = self.depth
+        save_board = copy.deepcopy(game.board)
+        save_player = player
         rscore, rstep = self.heuristicSearch(game, player, self.maxDepth, -inf, inf)
+        game.board = save_board.copy()
+        game.current = save_player
         return rstep

@@ -131,17 +131,15 @@ class ReversiUI(QWidget):
 
         aiMove = self.ai.findBestStep(self.game)
         if aiMove == ():
+            self.game.toggle()
+            self.update_ui(True)
             return
-
-        if self.game.current ==1 and self.typeGameMode == 2:        #means that is "Computer1" vs "computer2"      
-            self.current_player.setText("WHITE")
-        else:
-            self.current_player.setText("BLACK")
         
-        print("AI Move:", aiMove[0], aiMove[1])
+        #print("AI Move:", aiMove[0], aiMove[1])
         self.game.put(aiMove)
         self.update_ui(True)
-        self.game.skipPut()
+        self.final_message()
+        #self.game.skipPut()
 
     def human_computer(self, pos):
         if  self.game.current == 1:
@@ -180,6 +178,16 @@ class ReversiUI(QWidget):
             self.update_ui(True)
         self.game.skipPut()     #checks if the player is without any chance to move. then toggles if it true
 
+    def final_message(self):
+        empty, black, white = self.game.chessCount
+        if  empty == 0:
+            if black == white:
+                QMessageBox.information(self,"Tie!")
+            elif black > white:
+                QMessageBox.information(self, "Reversi", "Black Wins!")
+            elif black < white:
+                QMessageBox.information(self, "Reversi", "white Wins!")
+
     def onClickBoard(self, pos):
         """
         Game event handler on clicking the board
@@ -193,16 +201,10 @@ class ReversiUI(QWidget):
             self.human_computer(pos) 
         if self.typeGameMode == 3: # Human-Human
             self.human_human(pos)
+        
+        self.final_message()
 
-        empty, black, white = self.game.chessCount
-        if  empty == 0:
-            if black == white:
-                QMessageBox.information(self,"Tie!")
-            elif black > white:
-                QMessageBox.information(self, "Reversi", "Black Wins!")
-            elif black < white:
-                QMessageBox.information(self, "Reversi", "white Wins!")
-
+        
     def update_board(self):
         """
         Wrapped function to update the appearance of the board
@@ -224,6 +226,10 @@ class ReversiUI(QWidget):
 
         See: https://stackoverflow.com/q/49982509/5958455
         """
+        if self.game.current == 1 and self.typeGameMode == 2:        #means that is "Computer1" vs "computer2"      
+            self.current_player.setText("BLACK")
+        else:
+            self.current_player.setText("WHITE")
         self.update_board()
         if force:
             QApplication.instance().processEvents()

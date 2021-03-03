@@ -1,3 +1,5 @@
+import copy
+
 BS = 8
 
 EMPTY = 0
@@ -13,7 +15,8 @@ class Reversi:
     def __init__(self):
         self.board = None
         self.current = None
-        self.reset()
+        self.save_board = list()        # we save the current board then IA plays and count the points. aflter that we  replace the old board
+        self.reset()        
 
     def reset(self):
         """
@@ -109,6 +112,16 @@ class Reversi:
         return any(self.canPut(x, y, player) for x in range(BS) for y in range(BS))
 
     @property
+    def over(self):
+        """
+        If the number of empty spaces were equal zero
+        """
+        empty, black, white = self.chessCount
+        if empty == 0:
+            return 1
+        return 0
+
+    @property
     def chessCount(self):
         """
         Get the current score
@@ -136,6 +149,8 @@ class Reversi:
         if player is None:
             player = self.current
 
+        self.save_board_func()
+
         self.check(x, y, -1, -1, player, True)
         self.check(x, y, 1, 1, player, True)
         self.check(x, y, -1, 0, player, True)
@@ -148,6 +163,12 @@ class Reversi:
         self.board[x][y] = player
         self.toggle()
         return True
+
+    def save_board_func(self):
+        self.save_board = copy.deepcopy(self.board)
+
+    def undo(self):
+        self.board = self.save_board.copy()
 
     def skipPut(self):
         """

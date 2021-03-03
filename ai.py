@@ -48,6 +48,19 @@ AICONFIG = [
     (3, 8),
 ]
 
+AICONFIG1 = [
+    (1, 4),
+    (2, 6),
+    (3, 8),
+]
+
+AICONFIG2 = [
+    (1, 4),
+    (2, 6),
+    (3, 8),
+]
+
+
 class Reversi_AI:
     def __init__(self):
         self.nodeCount = 0
@@ -55,6 +68,8 @@ class Reversi_AI:
         self.maxDepth = 1
         self.final = 4
         self.aiLevel = 0
+        self.dif1 = 0
+        self.dif2 = 0
         self.setLevel()
    
     def heuristicScore(self, game, player):
@@ -201,7 +216,22 @@ class Reversi_AI:
 
         self.aiLevel = level
         self.depth, self.final = AICONFIG[level]
+    
+    def setLevel_ai_comp(self, level=None, c_player=None):
+        if c_player == 1:
+            self.dif1=level
+        if c_player == 2:
+            self.dif2=level
 
+    def check_ai_level(self, c_player):
+        if c_player == 1:
+            self.depth, self.final = AICONFIG1[self.dif1]
+            print("p1")
+
+        if c_player == 2:
+            self.depth, self.final = AICONFIG2[self.dif2]
+            print("p2")
+        
     def findBestStep(self, game):
         player = game.current
         steps = game.getAvailables()

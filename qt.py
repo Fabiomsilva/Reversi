@@ -59,15 +59,23 @@ class ReversiUI(QWidget):
         self.reset_button = QPushButton("New Game")
         self.ai_move_button = QPushButton("AI Move")
         self.diffBox = QComboBox()
-        self.diffBox.addItems(["1: Easy", "2: Medium", "3: Hard"])
+        self.diffBox.addItems(["Easy", "Medium", "Hard"])
         self.typeBox = QComboBox()
-        self.typeBox.addItems(["1: Human-Computer", "2: Computer-Computer", "3: Human-Human"])
+        self.typeBox.addItems(["Human-Computer", "Computer-Computer", "Human-Human"])
+        self.difp1box = QComboBox()
+        self.difp2box = QComboBox()
+        self.difp1box.addItems(["P1-Easy", "P1-Medium", "P1-Hard"])
+        self.difp2box.addItems(["P2-Easy", "P2-Medium", "P2-Hard"])
         self.ai_move_button = QPushButton("AI Move")
         self.ai_move_button.setHidden(False)
+        self.difp1box.setHidden(True)
+        self.difp2box.setHidden(True)
 
         self.controlBar.addWidget(self.ai_move_button)
         self.controlBar.addWidget(self.typeBox)
         self.controlBar.addWidget(self.diffBox)
+        self.controlBar.addWidget(self.difp1box)
+        self.controlBar.addWidget(self.difp2box)
         self.controlBar.addWidget(self.reset_button)
 
         # Add events
@@ -90,6 +98,22 @@ class ReversiUI(QWidget):
             self.resetGame()
             self.update_ui
 
+        def ai_diff1(index):
+            """
+            Event handler on "Difficulty" cascade menu changes
+            """
+            self.ai.setLevel_ai_comp(index, 1)
+            self.resetGame()
+            self.update_ui
+
+        def ai_diff2(index):
+            """
+            Event handler on "Difficulty" cascade menu changes
+            """
+            self.ai.setLevel_ai_comp(index, 2)
+            self.resetGame()
+            self.update_ui
+
         def typeGame(index):
             """
             Event handler on "type" cascade menu changes
@@ -99,10 +123,19 @@ class ReversiUI(QWidget):
 
             if self.typeGameMode == 1: # Human-Computer
                 self.ai_move_button.setHidden(False)
+                self.difp1box.setHidden(True)
+                self.difp2box.setHidden(True)
+                self.diffBox.setHidden(False)
             if self.typeGameMode == 2: # Computer-Computer   
                 self.ai_move_button.setHidden(False)
+                self.difp1box.setHidden(False)
+                self.difp2box.setHidden(False)
+                self.diffBox.setHidden(True)
             if self.typeGameMode == 3: # Human-Human
                 self.ai_move_button.setHidden(True)
+                self.difp1box.setHidden(True)
+                self.difp2box.setHidden(True)
+                self.diffBox.setHidden(True)
             self.update_ui
             self.resetGame()
             
@@ -111,8 +144,9 @@ class ReversiUI(QWidget):
         self.painter.mouseReleaseEvent = boardClick
         self.diffBox.currentIndexChanged.connect(diffChange)
         self.typeBox.currentIndexChanged.connect(typeGame)
+        self.difp1box.currentIndexChanged.connect(ai_diff1)
+        self.difp2box.currentIndexChanged.connect(ai_diff2)
         self.ai_move_button.clicked.connect(self.aiMove)
-        
         
         self.setLayout(self.master)
         self.setWindowTitle("Reversi: Artificial intelligence FEUP")
@@ -128,6 +162,8 @@ class ReversiUI(QWidget):
         """
         if self.game.current ==1 and self.typeGameMode == 1:        #means that is human vs computer and is human turn     
             return
+
+        self.ai.check_ai_level(self.game.current)
 
         aiMove = self.ai.findBestStep(self.game)
         if aiMove == ():
@@ -204,7 +240,6 @@ class ReversiUI(QWidget):
         
         self.final_message()
 
-        
     def update_board(self):
         """
         Wrapped function to update the appearance of the board

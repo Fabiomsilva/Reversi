@@ -1,23 +1,25 @@
 import copy
 import math
 import random
+from time import process_time
+import csv
 
 # import some constants
 from reversi import BS, EMPTY, BLACK, WHITE
 
 inf = 999999 
-MIN_NODES = 10000
-MIN_TICK = 1000
-if BS == 8:
+
+# SCORE is the values of each position of the board
+if BS == 8:                 
     SCORE = [
-        [  500, -150, 30, 10, 10, 30, -150,  500],  # noqa: E201, E241
-        [ -150, -250,  0,  0,  0,  0, -250, -150],  # noqa: E201, E241
-        [   30,    0,  1,  2,  2,  1,    0,   30],  # noqa: E201, E241
-        [   10,    0,  2, 16, 16,  2,    0,   30],  # noqa: E201, E241
-        [   10,    0,  2, 16, 16,  2,    0,   30],  # noqa: E201, E241
-        [   30,    0,  1,  2,  2,  1,    0,   30],  # noqa: E201, E241
-        [ -150, -250,  0,  0,  0,  0, -250, -150],  # noqa: E201, E241
-        [  500, -150, 30, 10, 10, 30, -150,  500],  # noqa: E201, E241
+        [  500, -150, 30, 10, 10, 30, -150,  500],  
+        [ -150, -250,  0,  0,  0,  0, -250, -150],  
+        [   30,    0,  1,  2,  2,  1,    0,   30],  
+        [   10,    0,  2, 16, 16,  2,    0,   30],  
+        [   10,    0,  2, 16, 16,  2,    0,   30],  
+        [   30,    0,  1,  2,  2,  1,    0,   30],  
+        [ -150, -250,  0,  0,  0,  0, -250, -150],  
+        [  500, -150, 30, 10, 10, 30, -150,  500],  
     ]
 else:
     SCORE = [
@@ -60,10 +62,8 @@ AICONFIG2 = [
     (3, 8),
 ]
 
-
 class Reversi_AI:
     def __init__(self):
-        self.nodeCount = 0
         self.depth = 1
         self.maxDepth = 1
         self.final = 4
@@ -73,7 +73,9 @@ class Reversi_AI:
         self.setLevel()
    
     def heuristicScore(self, game, player):
-        self.nodeCount += 1
+        '''
+        calculates heuristic score acording to the SCORE defined for each place of the board
+        '''
         c1, c2, s1, s2 = 0, 0, 0, 0
         board = game.board
         for x in range(BS):
@@ -151,7 +153,9 @@ class Reversi_AI:
         return s1 - s2
 
     def exactScore(self, game, player):
-        self.nodeCount += 1
+        """
+        check (start, adjacents, diagonal position)
+        """
         _, ccBlack, ccWhite = game.chessCount
         score = 0
         if ccBlack > ccWhite:
@@ -163,12 +167,18 @@ class Reversi_AI:
         return score
 
     def getHeuristicScore(self, game, player, step):
-        game.put(step)                                   # atention, this function put the peace and do toggle !!
+        '''
+        returns heuristicScore for the position of the current player acordind to the step
+        '''
+        game.put(step)                                   
         score = self.heuristicScore(game, player)
         game.undo()
         return score
 
     def heuristicSearch(self, game, player, depth, alpha, beta):
+        '''
+        returns the score and the best move to archive this score wit minmax implementation
+        '''
         if depth <= 0:
             return self.heuristicScore(game, player), ()
 
@@ -211,6 +221,9 @@ class Reversi_AI:
         return score, bestStep
 
     def setLevel(self, level=None):
+        '''
+        Defines AI level if the type of the game was human vs computer
+        '''
         if level is None:
             level = self.aiLevel
 
@@ -218,21 +231,29 @@ class Reversi_AI:
         self.depth, self.final = AICONFIG[level]
     
     def setLevel_ai_comp(self, level=None, c_player=None):
+        '''
+        Update AI level if the type of the game was computer vs computer
+        '''
         if c_player == 1:
             self.dif1=level
         if c_player == 2:
             self.dif2=level
 
     def check_ai_level(self, c_player):
+        '''
+        Defines AI level (by GUI comboBox) if the type of the game was computer vs computer
+        '''
         if c_player == 1:
             self.depth, self.final = AICONFIG1[self.dif1]
-            print("p1")
 
         if c_player == 2:
             self.depth, self.final = AICONFIG2[self.dif2]
-            print("p2")
         
     def findBestStep(self, game):
+        '''
+        finds best step. If hte total amount of peaces were less than 20% return a random move but
+        if the amout was higher then 20% return according to heuristic search
+        '''
         player = game.current
         steps = game.getAvailables()
         _, ccBlack, ccWhite = game.chessCount
@@ -250,11 +271,18 @@ class Reversi_AI:
                 return random.choice(randSteps)
 
         # Heuristic search
-        self.nodeCount = 0
         self.maxDepth = self.depth
         save_board = copy.deepcopy(game.board)
         save_player = player
+        start = process_time()                                      # to count the processing time
         rscore, rstep = self.heuristicSearch(game, player, self.maxDepth, -inf, inf)
+        stop = process_time()                                       # to count the processing time
         game.board = save_board.copy()
         game.current = save_player
+        
+        #collect data to csv file
+        time_elapsed = stop-start
+        with open('data.csv', 'a', newline='') as file:
+            writer = csv.writer(file, delimiter=',')
+            writer.writerow([str(BS),str(time_elapsed),str(self.dif1+1), str(self.dif2+1)])
         return rstep

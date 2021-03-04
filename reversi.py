@@ -1,11 +1,10 @@
 import copy
 
-BS = 8
+BS = 8                                    # board size
 
 EMPTY = 0
 BLACK = 1
 WHITE = 2
-HASH_KEY = 18446744073709551557
 
 
 class Reversi:
@@ -15,7 +14,7 @@ class Reversi:
     def __init__(self):
         self.board = None
         self.current = None
-        self.save_board = list()        # we save the current board then IA plays and count the points. aflter that we  replace the old board
+        self.save_board = list()        # we save the current board then IA plays and count the points. aflter that we replace the old board
         self.reset()        
 
     def reset(self):
@@ -48,7 +47,7 @@ class Reversi:
 
         Return: A boolean value indicating changes
         """
-        if player is None:  # Process default value
+        if player is None:              # Process default value
             player = self.current
 
         found = False
@@ -59,15 +58,15 @@ class Reversi:
             if not (0 <= x < BS and 0 <= y < BS):
                 break
             chess = self.board[x][y]
-            if chess == EMPTY:      # if empty cant place because i only can plance if there is some peace in the neighbour
-                break
-            elif chess == player:   # if there is one peace of the current player
+            if chess == EMPTY:          # if empty can't place because i only can plance if there is some peace in the neighbour
+                break   
+            elif chess == player:       # if there is one peace of the current player
                 found = True
                 break
             else:
                 c += 1
 
-        if c > 0 and found:
+        if c > 0 and found:             # checks the rest of the board
             if operate:
                 while c > 0:
                     x -= dx
@@ -87,7 +86,6 @@ class Reversi:
 
         if self.board[x][y] != EMPTY:
             return False
-        # any() and list comprehension is slower
         return self.check(x, y, -1, -1, player) or self.check(x, y, 1, 1, player) or \
             self.check(x, y, -1, 0, player) or self.check(x, y, 1, 0, player) or \
             self.check(x, y, -1, 1, player) or self.check(x, y, 1, -1, player) or \
@@ -108,7 +106,6 @@ class Reversi:
         """
         if player is None:
             player = self.current
-        # Usually True, use a generator expression hoping to save some calculation
         return any(self.canPut(x, y, player) for x in range(BS) for y in range(BS))
 
     @property
@@ -116,7 +113,7 @@ class Reversi:
         """
         If the number of empty spaces were equal zero
         """
-        empty, black, white = self.chessCount
+        empty, _, white = self.chessCount
         if empty == 0:
             return 1
         return 0
@@ -128,9 +125,7 @@ class Reversi:
 
         Returns a list, [empty, black, white]
         """
-        # Relies on EMPTY, BLACK, WHITE == 0, 1, 2
         cc = [0, 0, 0]
-
         for x in range(BS):
             for y in range(BS):
                 cc[self.board[x][y]] += 1
@@ -140,6 +135,7 @@ class Reversi:
         """
         Perform a move at a given position.
         Accepts a tuple at parameter 1, or two numbers at parameters 1 and 2
+        this function put the peace and do toggle !!
         """
         if y is None:
             # Unpack the tuple
@@ -149,7 +145,7 @@ class Reversi:
         if player is None:
             player = self.current
 
-        self.save_board_func()
+        self.save_board_func()                      
 
         self.check(x, y, -1, -1, player, True)
         self.check(x, y, 1, 1, player, True)
@@ -165,9 +161,15 @@ class Reversi:
         return True
 
     def save_board_func(self):
+        """
+        save current board before put because we could make undo later
+        """
         self.save_board = copy.deepcopy(self.board)
 
     def undo(self):
+        """
+        get the board before last put peace
+        """
         self.board = self.save_board.copy()
 
     def skipPut(self):
@@ -178,10 +180,3 @@ class Reversi:
             return False
         self.toggle()
         return True
-
-    def __hash__(self):
-        res = 0
-        for x in range(BS):
-            for y in range(BS):
-                res = (3 * res + self.board[x][y]) % HASH_KEY
-        return res ^ (1 + self.current)

@@ -8,18 +8,18 @@ import ai
 if BS == 8:
     GRID_SIZE = 50
 else:
-    GRID_SIZE = 25  #Side length of a grid
+    GRID_SIZE = 25                              # Side length of a grid
 
 # Constants that will affect how it looks
-BOARD_SIZE = GRID_SIZE*BS+40 #520  # Side length of whole board, including margin
-PIECE_SIZE = 21  # Diameter of circle that represents a piece
-DOT_SIZE = 9  # Dot indicator of possible moves
-IND_SIZE = 128  # The score indicator on the left, diameter of circle
-IND_BOARD_SIZE = 150  # Same as above, side length of canvas
+BOARD_SIZE = GRID_SIZE*BS+40                    # Side length of whole board, including margin
+PIECE_SIZE = 21                                 # Diameter of circle that represents a piece
+DOT_SIZE = 9                                    # Dot indicator of possible moves
+IND_SIZE = 128                                  # The score indicator on the left, diameter of circle
+IND_BOARD_SIZE = 150                            # Same as above, side length of canvas
 
-margin = (BOARD_SIZE - BS * GRID_SIZE) // 2  # Should be some 20
-padding = (GRID_SIZE - PIECE_SIZE) // 2  # Should be some 10
-d_padding = (GRID_SIZE - DOT_SIZE) // 2  # Should be some 25
+margin = (BOARD_SIZE - BS * GRID_SIZE) // 2     # Should be some 20
+padding = (GRID_SIZE - PIECE_SIZE) // 2         # Should be some 10
+d_padding = (GRID_SIZE - DOT_SIZE) // 2         # Should be some 25
 ind_margin =  (IND_BOARD_SIZE - IND_SIZE) // 2
 
 class ReversiUI(QWidget):
@@ -86,8 +86,7 @@ class ReversiUI(QWidget):
             ex, ey = event.x(), event.y()
             gx, gy = (ex - margin) // GRID_SIZE, (ey - margin) // GRID_SIZE
             rx, ry = ex - margin - gx * GRID_SIZE, ey - margin - gy * GRID_SIZE
-            if 0 <= gx < BS and 0 <= gy < BS and \
-                    abs(rx - GRID_SIZE / 2) < PIECE_SIZE / 2 > abs(ry - GRID_SIZE / 2):
+            if 0 <= gx < BS and 0 <= gy < BS and abs(rx - GRID_SIZE / 2) < PIECE_SIZE / 2 > abs(ry - GRID_SIZE / 2):
                 self.onClickBoard((gx, gy))
 
         def diffChange(index):
@@ -100,7 +99,7 @@ class ReversiUI(QWidget):
 
         def ai_diff1(index):
             """
-            Event handler on "Difficulty" cascade menu changes
+            Event handler on "Difficulty of player 1" cascade menu changes
             """
             self.ai.setLevel_ai_comp(index, 1)
             self.resetGame()
@@ -108,7 +107,7 @@ class ReversiUI(QWidget):
 
         def ai_diff2(index):
             """
-            Event handler on "Difficulty" cascade menu changes
+            Event handler on "Difficulty of player 2" cascade menu changes
             """
             self.ai.setLevel_ai_comp(index, 2)
             self.resetGame()
@@ -159,14 +158,15 @@ class ReversiUI(QWidget):
     def aiMove(self):
         """
         To perform an AI move
+        could be human vs computer or computer vs computer
         """
-        if self.game.current ==1 and self.typeGameMode == 1:        #means that is human vs computer and is human turn     
+        if self.game.current ==1 and self.typeGameMode == 1:        # means that is human vs computer and is human turn     
             return
 
-        self.ai.check_ai_level(self.game.current)
+        self.ai.check_ai_level(self.game.current)                   # in case its agent 1 vs agent 2 it will define difficulty          
 
         aiMove = self.ai.findBestStep(self.game)
-        if aiMove == ():
+        if aiMove == ():                                            # does not have available step
             self.game.toggle()
             self.update_ui(True)
             return
@@ -175,46 +175,49 @@ class ReversiUI(QWidget):
         self.game.put(aiMove)
         self.update_ui(True)
         self.final_message()
-        #self.game.skipPut()
 
     def human_computer(self, pos):
+        """
+        To perform the type of game "human vs computer"
+        """
         if  self.game.current == 1:
             x, y = pos
-            if not self.game.canPut(x, y):  # bad move, not possible move
+            if not self.game.canPut(x, y):                          # bad move, not possible move
                 self.update_ui(True)
                 return
-            if not self.game.any():         # if does not have any available chance
+            if not self.game.any():                                 # if does not have any available chance
                 self.game.toggle()
                 self.update_ui(True)
                 return
             self.game.put(x, y)
             print("Human Move:", x,y)
-            self.current_player.setText("WHITE")
             self.game.skipPut()
-            self.update_ui(True)    
-        else:
-            self.current_player.setText("BLACK")
+        self.update_ui(True)    
     
     def human_human(self, pos):
+        """
+        To perform the type of game "human vs human"
+        """
         if  self.game.current == 1:
             x, y = pos
-            if not self.game.canPut(x, y):  # bad move, not possible move
+            if not self.game.canPut(x, y):                          # bad move, not possible move
                 self.update_ui(True)
                 return
             self.game.put(x, y)
-            self.current_player.setText("WHITE")
-            self.update_ui(True)
+            self.final_message()
         else:
             x, y = pos
-            if not self.game.canPut(x, y):  # bad move, not possible move
+            if not self.game.canPut(x, y):                          # bad move, not possible move
                 self.update_ui(True)
                 return
             self.game.put(x, y)
-            self.current_player.setText("BLACK")
-            self.update_ui(True)
-        self.game.skipPut()     #checks if the player is without any chance to move. then toggles if it true
+        self.update_ui(True)
+        self.game.skipPut()                 
 
     def final_message(self):
+        """
+        Prints the popup with message of the "result" of the game
+        """
         empty, black, white = self.game.chessCount
         if  empty == 0:
             if black == white:
@@ -229,8 +232,7 @@ class ReversiUI(QWidget):
         Game event handler on clicking the board
         """ 
         i, x = pos
-        #if there is one peace there i cant put another one
-        if self.game.board[i][x] != 0:
+        if self.game.board[i][x] != 0:                              # if there is one peace there i cant put another one
             return
 
         if self.typeGameMode == 1: # Human-Computer
@@ -243,7 +245,6 @@ class ReversiUI(QWidget):
     def update_board(self):
         """
         Wrapped function to update the appearance of the board
-
         Primarily, setting data for the actual painter function to process
         """
         _, ccBlack, ccWhite = self.game.chessCount
@@ -258,10 +259,9 @@ class ReversiUI(QWidget):
     def update_ui(self, force=False):
         """
         Workaround of UI getting stuck at waiting AI calculation
-
-        See: https://stackoverflow.com/q/49982509/5958455
+        Updates the interface and current player
         """
-        if self.game.current == 1 and self.typeGameMode == 2:        #means that is "Computer1" vs "computer2"      
+        if self.game.current == 1:                                   # means that is "Computer1" vs "computer2"      
             self.current_player.setText("BLACK")
         else:
             self.current_player.setText("WHITE")
@@ -281,7 +281,6 @@ class PaintArea(QWidget):
     """
     The class that handles the drawing of the game board
     """
-
     def __init__(self, board=None):
         super(PaintArea, self).__init__()
         self.board = board
